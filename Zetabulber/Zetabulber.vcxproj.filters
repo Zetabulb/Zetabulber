@@ -1,0 +1,49 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CudaCompile Include="kernel.cu" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{6b14163f-fd74-4d14-bdd4-b17abb1f0455}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4c0bae0f-3444-4240-a356-02e06b803300}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="cuda_error_handler.cuh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="params.cuh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="raymarcher_params.cuh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vector3.cuh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="camera.cuh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="math.cuh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="complex.cuh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="zeta.cuh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mandelbulb.cuh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="color_gradient.cuh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="test_scenarios.cuh">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
