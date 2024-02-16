@@ -7,6 +7,21 @@
 #include "cuda_error_handler.cuh"
 #include <cuda/std/complex>
 
+/// <summary>
+/// CUDA implementation of the modified Borwein's efficient algorithm for calculating the Riemann zeta function
+/// This file contains two implementations one using float type variables and one using double type variables
+/// The float implementation is less accurate but much faster than the double implementation
+/// The float implementation functions have "_f" in their names
+/// To perform computations using this algorithm the coefficients psi must be initialized using functions zeta_init_host or zeta_init_host_f
+/// Then functions zeta_split and zeta_split_f can be called from the device to get Riemann zeta values
+/// This algorithm is best suited for computing multiple Riemann zeta function values at once
+/// The following functions use arrays of size 2 to store complex numbers
+/// </summary>
+
+
+/// <summary>
+/// Buffers for coefficients psi
+/// </summary>
 float* coefficients_device_buffer_f;
 __device__ float* coefficients_device_f;
 
@@ -16,11 +31,12 @@ __device__ int n_device;
 
 __device__ double _reflect_p[9] = { 0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7 };
 
-__device__ void polynomial(float value[], float result[]) {
-    result[0] = value[0] * value[0];
-    result[1] = 3 * value[1];
-}
-
+/// <summary>
+/// Reflection function used to expand the domain of the Riemann zeta function to sigma < 0.5
+/// </summary>
+/// <param name="value">input value complex number</param>
+/// <param name="result">result value complex number</param>
+/// <returns></returns>
 __device__ void gamma_reflect_splitf(float value[], float result[]) {
     float _reflect_sqrt_2_pi = sqrtf(2.0f * PI);
     float _reflect_exp_65 = expf(6.5f);
@@ -38,7 +54,6 @@ __device__ void gamma_reflect_splitf(float value[], float result[]) {
         im_gamma -= A * im_z;
     }
 
-    //printf("gamma, %f, %f\n", re_gamma, im_gamma);
     float B = sqrtf(2.0f * PI);
     float C = 2.0f * PI * expf(1.0f);
     float D[2] = { value[0] + 6.5, value[1]};
@@ -81,6 +96,12 @@ __device__ void gamma_reflect_splitf(float value[], float result[]) {
     }
 }
 
+/// <summary>
+/// Modified Borwein's efficient algorithm
+/// </summary>
+/// <param name="value">input value complex number</param>
+/// <param name="result">output value complex number</param>
+/// <returns></returns>
 __device__ void zeta_split_f(float value[], float result[]) {
     bool reflect = false;
     bool invert = false;
@@ -90,12 +111,6 @@ __device__ void zeta_split_f(float value[], float result[]) {
 
     float re_s = value[0];
     float im_s = value[1];
-
-    //if (complex_magf(value) < 0.1) {
-    //    result[0] = -0.5;
-    //    result[1] = 0;
-    //    return;
-    //}
 
     if (re_s < 0.5f) {
         re_s = 1.0f - re_s;
@@ -111,27 +126,14 @@ __device__ void zeta_split_f(float value[], float result[]) {
     float pow2 = powf(2.0f, 1.0f - re_s);
     float omega = 1.0f - powf(2.0f, 2.0f - re_s) * cosf(im_s * logf(2.0f)) + powf(4.0f, 1.0f - re_s);
 
-    //if (omega < 1e-6)
-    //    omega = 1e-8;
-
-    //printf("%f\n", omega);
-
-    //printf("%f, %f\n", pow2, omega);
     for (int k = 0; k < n_device - 1; k++) {
         int p = k % 2 == 0 ? 1.0f : -1.0f;
         float A = p * coefficients_device_f[k] / powf(k + 1.0f, re_s);
         float B1 = im_s * logf(k + 1.0f);
         float B2 = im_s * logf((k + 1.0f) / 2.0f);
 
-        //float B1 = im_s * (logf((k + 1.0f)/1000.0f) + mult);
-        //float B2 = im_s * (logf((k + 1.0f)/2000.0f) + mult);
-
         re_z += A * (cosf(B1) - pow2 * cosf(B2));
         im_z += A * (sinf(B1) - pow2 * sinf(B2));
-
-        //printf("%f, %f\n", A, (cosf(B1)));
-
-        //printf("[%d, %.16f, %.16f, %.16f, %.16f, %.16f, %.16f, %.16f, %.16f],\n", k, A / p, B1, B2, re_z, im_z, coefficients_device_double[k], (cos(B1) - pow2 * cos(B2)), (sin(B1) - pow2 * sin(B2)));
     }
 
     re_z /= omega;
@@ -154,11 +156,14 @@ __device__ void zeta_split_f(float value[], float result[]) {
 
     result[0] = re_z;
     result[1] = im_z;
-
-    //printf("%f, %f\n", result[0], result[1]);
 }
 
-
+/// <summary>
+/// Equivalent to gamma_reflect_splitf
+/// </summary>
+/// <param name="value"></param>
+/// <param name="result"></param>
+/// <returns></returns>
 __device__ void gamma_reflect_split(double value[], double result[]) {
     double _reflect_sqrt_2_pi = sqrt(2.0 * PI);
     double _reflect_exp_65 = exp(6.5);
@@ -176,7 +181,6 @@ __device__ void gamma_reflect_split(double value[], double result[]) {
         im_gamma -= A * im_z;
     }
 
-    //printf("gamma, %f, %f\n", re_gamma, im_gamma);
     double B = sqrt(2.0 * PI);
     double C = 2.0 * PI * exp(1.0f);
     double D[2] = { value[0] + 6.5, value[1] };
@@ -219,7 +223,12 @@ __device__ void gamma_reflect_split(double value[], double result[]) {
     }
 }
 
-
+/// <summary>
+/// Equivalent to zeta_split_f
+/// </summary>
+/// <param name="value"></param>
+/// <param name="result"></param>
+/// <returns></returns>
 __device__ void zeta_split(double value[], double result[]) {
     bool reflect = false;
     bool invert = false;
@@ -244,20 +253,14 @@ __device__ void zeta_split(double value[], double result[]) {
     double pow2 = pow(2.0, 1.0 - re_s);
     double omega = 1.0 - pow(2.0, 2.0 - re_s) * cos(im_s * log(2.0)) + pow(4.0, 1.0 - re_s);
 
-    //printf("%f, %f\n", pow2, omega);
     for (int k = 0; k < n_device - 1; k++) {
         int p = k % 2 == 0 ? 1 : -1;
         double A = p * coefficients_device[k] / pow(k + 1.0, re_s);
         double B1 = im_s * log(k + 1.0);
         double B2 = im_s * log((k + 1.0) / 2.0);
 
-        //float B1 = im_s * (logf((k + 1.0f)/1000.0f) + mult);
-        //float B2 = im_s * (logf((k + 1.0f)/2000.0f) + mult);
-
         re_z += A * (cos(B1) - pow2 * cos(B2));
         im_z += A * (sin(B1) - pow2 * sin(B2));
-
-        //printf("[%d, %.16f, %.16f, %.16f, %.16f, %.16f, %.16f, %.16f, %.16f],\n", k, A / p, B1, B2, re_z, im_z, coefficients_device_double[k], (cos(B1) - pow2 * cos(B2)), (sin(B1) - pow2 * sin(B2)));
     }
 
     re_z /= omega;
@@ -281,6 +284,13 @@ __device__ void zeta_split(double value[], double result[]) {
     result[1] = im_z;
 }
 
+/// <summary>
+/// Emipirically evaluated minimum number n of coefficients required to compute the Riemann zeta function with d decimal digis of accuracy
+/// Only gives reliable results for the double implementation of this algorithm
+/// </summary>
+/// <param name="t">maximum imaginary part of an argument for which the Riemann zeta function should be computed</param>
+/// <param name="d">decimal digits of accuracy with which the Riemann zeta function should be computed</param>
+/// <returns></returns>
 int nEMB(float t, int d) {
     double a = 0.451;
     double b = 1.407 * std::sqrt(d) - 0.245;
@@ -288,6 +298,12 @@ int nEMB(float t, int d) {
     return ceil(a * t + b * std::sqrt(t) + c);
 }
 
+
+/// <summary>
+/// Coefficients psi computation
+/// </summary>
+/// <param name="n">number of coefficients, usually given by the function nEMB</param>
+/// <returns></returns>
 float* cMBf(int n) {
     int K = std::floor((float)n / std::sqrt(2));
     float* T = new float[n + 1];
@@ -306,6 +322,11 @@ float* cMBf(int n) {
     return cnk;
 }
 
+/// <summary>
+/// Equivalent to cMBf
+/// </summary>
+/// <param name="n"></param>
+/// <returns></returns>
 double* cMB(int n) {
     int K = std::floor((double)n / std::sqrt(2));
     double* T = new double[n + 1];
@@ -325,12 +346,29 @@ double* cMB(int n) {
 }
 
 
+/// <summary>
+/// Function used allocate a buffer in the device.
+/// </summary>
+/// <typeparam name="T"></typeparam>
+/// <param name="pointer"></param>
+/// <param name="buffer"></param>
+/// <param name="size"></param>
+/// <param name="ceh"></param>
+/// <param name="error_key"></param>
 template <typename T>
 void malloc_pointer(T*& pointer, T*& buffer, unsigned int size, CudaErrorHandler ceh, unsigned int error_key) {
     ceh.checkCudaStatus(cudaMalloc((void**)&buffer, size * sizeof(T)), error_key);
     ceh.checkCudaStatus(cudaMemcpyToSymbol(pointer, &buffer, sizeof(T*)), error_key);
 }
 
+/// <summary>
+/// Coefficient psi initialisation function. Must be called before calling zeta_split_f.
+/// Note that since the initialisation process is linear it is usuallly more efficient for it to be performed on the CPU. 
+/// </summary>
+/// <param name="max_t">maximum imaginary part of an argument for which the Riemann zeta function should be computed</param>
+/// <param name="d"></param>
+/// <param name="ceh">Instance of the CudaErrorHandler. Error handling can be removed or changed if needed.</param>
+/// <param name="error_key">Error key of the CudaErrorHandler.</param>
 void zeta_init_host_f(float max_t, int d, CudaErrorHandler ceh, unsigned int error_key) {
     int n = nEMB(max_t, d);
     float* c_buffer = cMBf(n);
@@ -342,6 +380,13 @@ void zeta_init_host_f(float max_t, int d, CudaErrorHandler ceh, unsigned int err
     delete[] c_buffer;
 }
 
+/// <summary>
+/// Equivalent to zeta_init_host_f
+/// </summary>
+/// <param name="max_t"></param>
+/// <param name="d"></param>
+/// <param name="ceh"></param>
+/// <param name="error_key"></param>
 void zeta_init_host(float max_t, int d, CudaErrorHandler ceh, unsigned int error_key) {
     int n = nEMB(max_t, d);
     double* c_buffer = cMB(n);

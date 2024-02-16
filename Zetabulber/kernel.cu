@@ -468,24 +468,24 @@ int main()
     //};
 
     //orange
-    //float4 colors[n_colors] = {
-    //make_float4(83, 6, 145, 0.0f),
-    //make_float4(194, 12, 204, 0.0f),
-    //make_float4(181, 28, 11, 0.0f),
-    //make_float4(252, 86, 3, 0.0f),
-    //make_float4(252, 202, 3, 0.0f),
-    //};
+    float4 colors[n_colors] = {
+    make_float4(83, 6, 145, 0.0f),
+    make_float4(194, 12, 204, 0.0f),
+    make_float4(181, 28, 11, 0.0f),
+    make_float4(252, 86, 3, 0.0f),
+    make_float4(252, 202, 3, 0.0f),
+    };
 
     //green
-    float4 colors[n_colors] = {
-    make_float4(210, 252, 223, 0.0f),
-    make_float4(210, 252, 223, 0.0f),
-    make_float4(166, 245, 190, 0.0f),
-    //make_float4(80, 143, 99, 0.0f),
+    //float4 colors[n_colors] = {
+    //make_float4(210, 252, 223, 0.0f),
+    //make_float4(210, 252, 223, 0.0f),
+    //make_float4(166, 245, 190, 0.0f),
+    ////make_float4(80, 143, 99, 0.0f),
 
-    make_float4(11, 156, 112, 0.0f),
-    make_float4(2, 46, 33, 0.0f),
-    };    
+    //make_float4(11, 156, 112, 0.0f),
+    //make_float4(2, 46, 33, 0.0f),
+    //};    
     
     //blue
     //float4 colors[n_colors] = {
